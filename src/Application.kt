@@ -4,6 +4,9 @@ import io.ktor.application.*
 import io.ktor.response.*
 import io.ktor.request.*
 import io.ktor.routing.*
+import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -26,6 +29,35 @@ fun Application.module(testing: Boolean = false) {
         SchemaUtils.create(Cities, Users)
     }
 
+    // 先寫一些資料進 H2
+    transaction {
+        val stPete = City.new {
+            name = "St. Petersburg"
+        }
+
+        val munich = City.new {
+            name = "Munich"
+        }
+
+        User.new {
+            name = "User A"
+            city = stPete
+            age = 5
+        }
+
+        User.new {
+            name = "User B"
+            city = stPete
+            age = 27
+        }
+
+        User.new {
+            name = "User C"
+            city = munich
+            age = 42
+        }
+    }
+
     routing {
 
         get("/") {
@@ -43,4 +75,19 @@ object Users : IntIdTable() {
 
 object Cities: IntIdTable() {
     val name = varchar("name", 50)
+}
+
+class User(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<User>(Users)
+
+    var name by Users.name
+    var city by City referencedOn Users.city
+    var age by Users.age
+}
+
+class City(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<City>(Cities)
+
+    var name by Cities.name
+    val users by User referrersOn Users.city
 }
