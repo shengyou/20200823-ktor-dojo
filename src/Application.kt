@@ -4,7 +4,10 @@ import io.ktor.application.*
 import io.ktor.response.*
 import io.ktor.request.*
 import io.ktor.routing.*
+import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.transaction
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -18,6 +21,11 @@ fun Application.module(testing: Boolean = false) {
         driver = "org.h2.Driver"
     )
 
+    // 先把資料表建立起來
+    transaction {
+        SchemaUtils.create(Cities, Users)
+    }
+
     routing {
 
         get("/") {
@@ -27,3 +35,12 @@ fun Application.module(testing: Boolean = false) {
     }
 }
 
+object Users : IntIdTable() {
+    val name = varchar("name", 50).index()
+    val city = reference("city", Cities)
+    val age = integer("age")
+}
+
+object Cities: IntIdTable() {
+    val name = varchar("name", 50)
+}
