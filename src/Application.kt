@@ -60,10 +60,32 @@ fun Application.module(testing: Boolean = false) {
 
     routing {
 
+        // 首頁：回傳 Hello, world
         get("/") {
             call.respondText("Hello, world")
         }
 
+        // 城市頁：回傳所有城市名字
+        get("/cities") {
+            val cities = transaction {
+                City.all().joinToString {
+                    it.name
+                }
+            }
+
+            call.respondText(cities)
+        }
+
+        // 使用者頁：回傳所有使用者的名字
+        get("/users") {
+            val users = transaction {
+                User.all().joinToString {
+                    it.name
+                }
+            }
+
+            call.respondText(users)
+        }
     }
 }
 
